@@ -1,0 +1,97 @@
+
+        static void Main(string[] args)
+        {
+
+            //Skapa 2D array, spelplan
+            char[,] spelplan =
+            {
+                { '|', '|', '|', '|', '|' },
+                { '|', '|', '|', '|', '|' },
+                { '|', '|', '|', '|', '|' },
+            };
+
+            Console.WriteLine("Ordinarie Spelplan");
+
+            SkrivUt(spelplan);
+
+            Console.WriteLine("From what hög, and how many, would you like to remove?");
+            Console.WriteLine("Remember to separate your numbers by space, eg. 1 4");
+
+            string drag = Console.ReadLine();
+
+            if (DragTest(drag, out int hög, out int antal))
+            {
+                TaBortPinnar(spelplan, hög, antal);
+
+                Console.WriteLine();
+                Console.WriteLine("Hmm, bra drag..");
+                Console.WriteLine();
+                SkrivUt(spelplan);
+            }
+            else
+            {
+                Console.WriteLine("Fattar inte vad du menar");
+            }
+
+            Console.ReadLine();
+
+        }
+        static void SkrivUt(char[,] spelplan)
+        {
+            for (int row = 0; row < spelplan.GetLength(0); row++)
+            {
+                for (int col = 0; col < spelplan.GetLength(1); col++)
+                {
+                    Console.Write(spelplan[row, col] + " ");
+                }
+                Console.WriteLine(); // Move to the next row
+                Console.WriteLine();
+            }
+        }
+        static void TaBortPinnar(char[,] spelplan, int hög, int antal)
+        {
+            if (hög < 1 || hög > 3)
+            {
+                Console.WriteLine("Jag känner inte till den högen");
+                return;
+            }
+
+            int pinnar = 0;
+            char tomt = ' ';
+            for (int i = 0; i < 5; i++)
+                if (spelplan[hög - 1, i] == '|')
+                    pinnar++;
+            Console.WriteLine("Det finns" + pinnar + "st pinnar i hög nummer " + hög + " Du vill ta bort " + antal + " pinnar");
+
+            if (pinnar >= antal)
+                for (int i = pinnar - 1; i >= pinnar - antal; i--)
+                {
+                    Console.WriteLine("Du är i foorloopen");
+                    if (spelplan[hög - 1, i] == '|')
+                    {
+                        spelplan[hög - 1, i] = tomt;
+                        Console.WriteLine("Du är i if-statementet");
+                    }
+                }
+
+            if (pinnar < antal)
+                Console.WriteLine("Vafan gör du? Är du dum? Är du rasist?");
+        }
+        static bool DragTest(string drag, out int hög, out int antal)
+        {
+            hög = 0;
+            antal = 0;
+
+            string[] DragInfo = drag.Split(' ');
+            if (DragInfo.Length != 2)
+            {
+                return false;
+            }
+
+            if (!int.TryParse(DragInfo[0], out hög) || !int.TryParse(DragInfo[1], out antal))
+            {
+                return false;
+            }
+
+            return true;
+        }
