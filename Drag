@@ -1,4 +1,3 @@
-
         static void Main(string[] args)
         {
 
@@ -13,30 +12,59 @@
             Console.WriteLine("Ordinarie Spelplan");
 
             SkrivUt(spelplan);
+            bool vinnare = false;
+            bool spelare1 = true;
 
-            Console.WriteLine("From what hög, and how many, would you like to remove?");
-            Console.WriteLine("Remember to separate your numbers by space, eg. 1 4");
-
-            string drag = Console.ReadLine();
-
-            if (DragTest(drag, out int hög, out int antal))
+            while (vinnare == false)
             {
-                TaBortPinnar(spelplan, hög, antal);
+                if (spelare1 == true)
+                {
+                    Console.WriteLine("Your turn! From what pile, and how many would you like to remove?");
+                    Console.WriteLine("Remember to separate your numbers by space, eg. 1 4");
 
-                Console.WriteLine();
-                Console.WriteLine("Hmm, bra drag..");
-                Console.WriteLine();
-                SkrivUt(spelplan);
+                    string drag = Console.ReadLine();
+
+                    if (DragTest(drag, out int hög, out int antal)) //Testar inputsträngens validitet(drag)
+                    {
+                        TaBortPinnar(spelplan, hög, antal); //Utför draget, tar bort antalet pinnar från angedd hög, uppdaterar matrisen
+
+
+                        Console.WriteLine();
+                        Console.WriteLine("Hmm, bra drag..");
+                        Console.WriteLine();
+
+                        SkrivUt(spelplan); //Skriver ut den uppdaterade matrisen (spelplanen)
+                        spelare1 = false;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Ogiltig input");
+                    }
+                }
+                else
+                {
+                    DragTest(AIdrag(spelplan), out int hög, out int antal);
+                    TaBortPinnar(spelplan, hög, antal);
+                    Console.WriteLine("Datorn har gjort sitt drag...");
+                    Console.WriteLine();
+                    SkrivUt(spelplan);
+                    spelare1 = true;
+                }
+
+                vinnare = GameOver(spelplan);
             }
+
+            Console.WriteLine("GAME OVER");
+            Console.WriteLine();
+
+            if (spelare1 == false) // blir motsatt 
+                Console.WriteLine("Grattis spelare 1! Du vann!");
             else
-            {
-                Console.WriteLine("Fattar inte vad du menar");
-            }
-
+                Console.WriteLine("Datorn har bestat dig!");
             Console.ReadLine();
 
         }
-        static void SkrivUt(char[,] spelplan)
+        static void SkrivUt(char[,] spelplan) //Skriver ut spelplanen, eller 2DArrayen
         {
             for (int row = 0; row < spelplan.GetLength(0); row++)
             {
@@ -44,54 +72,92 @@
                 {
                     Console.Write(spelplan[row, col] + " ");
                 }
-                Console.WriteLine(); // Move to the next row
+                Console.WriteLine(); //Lite utrymme mellan högarna
                 Console.WriteLine();
             }
         }
         static void TaBortPinnar(char[,] spelplan, int hög, int antal)
         {
-            if (hög < 1 || hög > 3)
+            if (hög < 1 || hög > 3) //Testar om högen finns, (om 1 =< hög =< 3), kanske finns ett bättre sätt att göra detta på också. Lägg till i dragtest kanske?
             {
                 Console.WriteLine("Jag känner inte till den högen");
                 return;
             }
 
             int pinnar = 0;
-            char tomt = ' ';
-            for (int i = 0; i < 5; i++)
+            char tomt = ' '; //Behövde tydligen deklarera denna variabel, osäker på varför
+
+            for (int i = 0; i < 5; i++) //räkna antalet pinnar i högen, kanske finns ett bättre sätt att göra detta på.
                 if (spelplan[hög - 1, i] == '|')
                     pinnar++;
-            Console.WriteLine("Det finns" + pinnar + "st pinnar i hög nummer " + hög + " Du vill ta bort " + antal + " pinnar");
 
-            if (pinnar >= antal)
-                for (int i = pinnar - 1; i >= pinnar - antal; i--)
+            if (pinnar >= antal) //Om detta är sant kan vi utföra draget
+                for (int i = pinnar - 1; i >= pinnar - antal; i--) //Indexet för pinnarna är 1 mindre än pinnens "nummer".
+                                                                   //Dvs fjärde pinnen i en hög har index 3 i den arrayen.
                 {
-                    Console.WriteLine("Du är i foorloopen");
-                    if (spelplan[hög - 1, i] == '|')
+                    if (spelplan[hög - 1, i] == '|') //Om pinnen vi vill ta bort finns så kan vi ta bort den
                     {
-                        spelplan[hög - 1, i] = tomt;
-                        Console.WriteLine("Du är i if-statementet");
+                        spelplan[hög - 1, i] = tomt; //Ersätt pinnen med ett space ' '. (Ta bort den)   
                     }
                 }
 
-            if (pinnar < antal)
-                Console.WriteLine("Vafan gör du? Är du dum? Är du rasist?");
+            if (pinnar < antal) // kontrollerar att antalet pinnar man vill ta bort finns i högen (antal=<pinnar)
+                Console.WriteLine("Så många pinnar finns inte i högen");
         }
         static bool DragTest(string drag, out int hög, out int antal)
         {
-            hög = 0;
+            hög = 0; //Behövde deklarera dessa, lite osäker på precis varför
             antal = 0;
 
-            string[] DragInfo = drag.Split(' ');
-            if (DragInfo.Length != 2)
+            string[] DragInfo = drag.Split(' '); //Splittar input i två strängar vid mellanslaget, lagrar dom i en array som heter DragInfo.
+            if (DragInfo.Length != 2) //Om arrayen inte innehåller 2 element är det en ogiltig input
             {
                 return false;
             }
 
-            if (!int.TryParse(DragInfo[0], out hög) || !int.TryParse(DragInfo[1], out antal))
+            if (!int.TryParse(DragInfo[0], out hög) || !int.TryParse(DragInfo[1], out antal)) //Försöker konvertera strängarna i DragInfo till ints.
+                                                                                              //Om detta inte går är det en ogiltig input
             {
                 return false;
             }
+
+            return true;
+        }
+        static string AIdrag(char [,] spelplan)
+        {
+            string drag = "";
+            bool dragok = false;
+            while (dragok == false)
+            {
+                Random rh = new Random();
+                int rhInt = rh.Next(1, 4); //rp är random hög, här genererar vi en hög att plocka, mellan 1-3
+                Random rp = new Random();
+                int rpInt = rp.Next(1, 6); //rp är random pinnar, här genererar vi ett antal pinnar att plocka, mellan 1-5
+
+                drag = rhInt + " " + rpInt;
+
+                int pinnar = 0;
+
+                for (int i = 0; i < 5; i++) //räkna antalet pinnar i högen, kanske finns ett bättre sätt att göra detta på.
+                    if (spelplan[rhInt - 1, i] == '|')
+                        pinnar++;
+
+                if (rpInt <= pinnar)
+                {
+                    dragok = true;
+                }
+            }
+
+            return drag;
+        }
+
+        static bool GameOver(char[,] spelplan)
+        {
+            foreach (char x in spelplan)
+                if (x == '|')
+                {
+                    return false;
+                }
 
             return true;
         }
