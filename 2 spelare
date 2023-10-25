@@ -1,0 +1,273 @@
+  static void Main(string[] args)
+        {
+            Console.WriteLine("Welcome to Nim! \nPlay against eachother or against an AI \n");
+            Console.WriteLine("The game starts with three piles of sticks with five sticks in each stack. \n \nTake turns picking a pile and the amount of sticks (1-5) that will be removed from that pile");
+            Console.WriteLine("\nThe player that removes the last stick from the last remaining pile wins the game!");
+
+            char[,] piles = new char[3,5] //Detta är spelplanen men fungerar bara som en visualisering för spelarna.
+            {
+                {'|', '|', '|', '|', '|'},
+                {'|', '|', '|', '|', '|'},
+                {'|', '|', '|', '|', '|'},
+            };
+
+            int[,] stickCheck = new int[3, 1] // Detta är den "äkta" spelplanen och det är genom denna som dragen kan valideras och utföras.
+            {
+                {5},
+                {5},
+                {5},
+            };
+
+
+            int oneOrTwoplayers = TwoPlayersOrAI(); //Skickar en iväg till en metod som låter spelarna använda om man ska spela mot en AI eler mot varandra.
+            if (oneOrTwoplayers == 1)
+            {
+
+            }
+            else if (oneOrTwoplayers == 2) // Två spelare
+            {
+                string[] playerNames = CreatePlayerNames(); // Detta låter användarna skapa sina användarnamn och de sparas i en array.
+
+                int whoseTurn = 0; // Denna variabel är till för att hålla koll på vems tur det är och är direkt kopplad till metoden "PlayerTurn". Är värdet 0 är det spelare 1:s tur och är värdet 1 är det spelare 2:s tur
+
+                bool winner = false; // Håller igång loopen tills någon vinner.
+
+                Console.WriteLine("Ordinary field");
+                WriteOutPiles(piles);
+
+                bool moveValid = false; // Håller igång en loop så länge en användares input inte är korrekt.
+
+                string playerMove = ""; // Variabeln måste deklareras utanför loopen.
+
+                while (winner == false)
+                {
+                    whoseTurn = PlayerTurn(whoseTurn, playerNames); // Variabeln "whoseTurn" uppdateras varje metoden körs igenom. Metoden skriver ut vilken spelares tur det är och uppdaterar variabeln ovanför.
+
+                    do
+                    {
+                        playerMove = PlayerMoveInput(); // playerMove är en string och kommer behöva omvandlas till en array inuti metoderna.
+                        moveValid = PlayerMoveValid(playerMove, stickCheck); // PlayerMoveValid är den viktigaste metoden för felhantering. Den bygger på den äkta spelplanen.
+                    } while (moveValid == false);
+
+                    piles = ExecuteMove(playerMove, piles); // Spelplanen uppdateras om spelarens drag är korrekt.
+                    WriteOutPiles(piles); // Skriver ut den nya spelplanen
+
+                    winner = WinnerCheck(stickCheck); // Om alla värden i den äkta spelplanen (stickCheck) så deklareras vinnaren.
+                }
+                if (whoseTurn == 0) // Detta är förmodligen onödig kod men eftersom "whoseTurn" uppdateras inuti metoden kommer fel siffra att returneras till Main-metoden och därför måste man ändra på dess värde här.
+                {
+                    whoseTurn++;
+                    Console.WriteLine($"Congratulations! {playerNames[whoseTurn]}, You win!!!");
+                }
+                else if (whoseTurn == 1)
+                {
+                    whoseTurn--;
+                    Console.WriteLine($"Congratulations! {playerNames[whoseTurn]}, You win!!!");
+                }
+                Console.ReadKey();
+            }
+            else // Denna är poänglös men är en failsafe ifall metoden av något skäl ändå skulle göra fel.
+            {
+                Console.WriteLine("Something has gone very wrong");
+                Main(args); // Förhoppningsvis startar programmet om ifall något har gått riktigt fel.
+            }
+        }
+
+        //// GENERAL METHODS
+
+        /// <summary>
+        /// User Chooses between one or two players
+        /// </summary>
+        /// <returns>1 or 2</returns>
+        static int TwoPlayersOrAI()
+        {
+            Console.WriteLine("choose: one or two players (write 1 or 2)");
+            int.TryParse(Console.ReadLine(), out int oneOrTwoPlayers);
+
+            if (oneOrTwoPlayers > 0 && oneOrTwoPlayers < 3)
+            {
+                return oneOrTwoPlayers;
+            }
+            else
+            {
+                Console.WriteLine("Något gick fel: försök igen");
+                return TwoPlayersOrAI();
+            }
+        }
+
+
+
+       /// <summary>
+       /// Writes out the stacks
+       /// </summary>
+       /// <param name="stacks"></param>
+       static void WriteOutPiles(char[,] piles)
+        {
+            for (int row = 0; row < piles.GetLength(0); row++) // Skriver ut raden men piles.GetLength(0) känns konstig??
+            {
+                for (int col = 0; col < 5; col++) // Skriver ut kolumnerna
+                {
+                    Console.Write(piles[row, col]); 
+                }
+                Console.WriteLine();
+            }
+        }
+
+
+
+        /// <summary>
+        /// tar emot spelarens drag och kollar så att draget går att utföras.
+        /// </summary>
+        /// <param name="playerMove"></param>
+        /// <param name="stickCheck"></param>
+        /// <returns>sant eller falskt</returns>
+        static bool PlayerMoveValid(string playerMove, int[,] stickCheck)
+        {
+            string[] playerMoveSplit = playerMove.Split(' '); // eftersom spelaren skriver draget som en string måste vi göra om strängen till en array så att vi kan använda talen separat.
+
+            if (int.TryParse(playerMoveSplit[0], out int pile) && int.TryParse(playerMoveSplit[1], out int stickAmount)) // Kollar om det går att göra om värdena i string-arrayen till integers.
+            {
+                if (pile < 4 && pile > 0 && stickAmount < 6 && stickAmount > 0) // Kollar så att heltalens storlekar är inom spelplanen.
+                {
+                    if (stickCheck[pile - 1, 0] != 0) // Kollar ifall högen redan är tom.
+                    {
+                        if (stickAmount <= stickCheck[pile - 1, 0] && stickAmount > 0) // Kollar så att mängden stickor man vill ta bort faktiskt finns i högen man har valt.
+                        {
+                            stickCheck[pile - 1, 0] -= stickAmount; // Den riktiga spelplanen uppdateras.
+                            return true;
+                        }
+                        else
+                        {
+                            Console.WriteLine("There is a problem with the amount of sticks chosen: try again");
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("The pile is already empty: try again");
+                        return false;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Your chosen pile or amount of sticks does not fit: try again");
+                    return false;
+                }
+            }
+            else
+            {
+                Console.WriteLine("Incorrect input: try again");
+                return false;
+            }
+        }
+
+
+        /// <summary>
+        /// Kollar om någon har vunnit
+        /// </summary>
+        /// <param name="stickCheck"></param>
+        /// <returns>sant eller falskt</returns>
+        static bool WinnerCheck(int[,] stickCheck)
+        {
+            if (stickCheck[0, 0] == 0 && stickCheck[1, 0] == 0 && stickCheck[2, 0] == 0) // Om alla värden i den riktiga spelplanen är 0 har någon vunnit.
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+
+
+        //// 1 PLAYER/AI
+
+
+
+        //// 2 PLAYERS
+
+        /// <summary>
+        /// Ber spelarna att skriva in sina spelnamn.
+        /// </summary>
+        /// <returns> En array med spelarnas namn </returns>
+        static string[] CreatePlayerNames()
+        {
+            Console.Write("Player one's name: ");
+            string player1 = Console.ReadLine();
+            Console.Write("Player two's name: ");
+            string player2 = Console.ReadLine();
+
+            string[] playerNameArr = new string[2] { player1, player2 }; // Jag vet inte hur man returnerar två olika variabler så jag skickar tillbaka en array med namnen istället.
+            return playerNameArr;
+        }
+
+
+
+        /// <summary>
+        /// skriver ut vems tur det är.
+        /// </summary>
+        /// <param name="turn"></param>
+        /// <param name="playerNames"></param>
+        /// <returns>1 eller 0 beroende på det förra värdet.</returns>
+        static int PlayerTurn(int turn, string[] playerNames) //Denna metod skriver ut vems tur det är. Detta görs genom en spak som switchar mellan 0 och 1 varje gång metoden körs. Dock ska vinnarnamnen skrivas ut i Mainmetoden och då måste man flippa spaken igen.
+        {
+            if (turn == 1)
+            {
+                Console.WriteLine(playerNames[1] + "'s turn");
+                turn--;
+                return turn;
+            }
+            else
+            {
+                Console.WriteLine(playerNames[0] + "'s turn");
+                turn++;
+                return turn;
+            }
+        }
+
+
+
+        /// <summary>
+        /// Asks for a players move
+        /// </summary>
+        /// <returns>a string containing which pile and amount of sticks</returns>
+        static string PlayerMoveInput()
+        {
+            Console.WriteLine("Choose the amount of sticks from a pile you want to remove.");
+            Console.WriteLine("You choose pile and amount of sticks by writing \"1 2\"");
+            string playerMove = Console.ReadLine();
+            return playerMove;
+        }
+
+
+        /// <summary>
+        /// Uppdaterar den visuella spelplanen
+        /// </summary>
+        /// <param name="playerMove"></param>
+        /// <param name="piles"></param>
+        /// <returns>den uppdaterade spelplanen</returns>
+        static char[,] ExecuteMove(string playerMove, char[,] piles)
+        {
+            string[] playerMoveSplit = playerMove.Split(' ');
+            int.TryParse(playerMoveSplit[0], out int pile);
+            int.TryParse(playerMoveSplit[1], out int stickAmount);
+
+            int index = 4;
+
+            while (stickAmount > 0) // StickAmount är mängden stickor spelaren vill ta bort.
+            {
+                if (piles[pile-1, index] == '|') // Denna if-sats går igenom den valda högens stickor från det högsta indexet till 0. Om index 4 är en | minskas stickAmount och index med -1.
+                {
+                    piles[pile-1, index] = ' ';
+                    stickAmount--;
+                    index--;
+                }
+                else
+                {
+                    index--; // Detta går förmodligen att göra som en for-loop men jag lyckades inte.
+                }
+
+            }
+            return piles;
+        }
