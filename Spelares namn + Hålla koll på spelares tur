@@ -1,0 +1,43 @@
+ Console.WriteLine("Welcome to Nim! The rules are as followed: \n Regler...");
+ string[] playerNames = CreatePlayerNames(); // Denna stringarray innehåller spelarnas namn (spelare 1 har index 0 och spelare 2 har index 1)
+
+ int whoseTurn =0; // Denna variabel är till för att hålla koll på vems tur det är och är direkt kopplad till metoden "PlayerTurn". Är värdet 0 är det spelare 1:s tur och är värdet 1 är det spelare 2:s tur
+ whoseTurn = PlayerTurn(whoseTurn, playerNames); // Variabeln "whoseTurn" uppdateras varje metoden körs igenom. Metoden skriver ut vilken spelares tur det är och uppdaterar variabeln ovanför.
+ PlayerActions();
+
+        /// <summary>
+        /// Ber spelarna att skriva in sina spelnamn.
+        /// </summary>
+        /// <returns> En array med spelarnas namn </returns>
+        static string[] CreatePlayerNames()
+        {
+            Console.Write("Player one's name: ");
+            string player1 = Console.ReadLine();
+            Console.Write("Player two's name: ");
+            string player2 = Console.ReadLine();
+
+            string[] playerNameArr = new string[2] { player1, player2 };
+            return playerNameArr;
+        }
+
+        /// <summary>
+        /// skriver ut vems tur det är.
+        /// </summary>
+        /// <param name="turn"></param>
+        /// <param name="playerNames"></param>
+        /// <returns>1 eller 0 beroende på det förra värdet.</returns>
+        static int PlayerTurn(int turn, string[] playerNames)
+        {
+            if (turn == 1)
+            {
+                Console.WriteLine(playerNames[1] + "'s turn");
+                turn--;
+                return turn;
+            }
+            else
+            {
+                Console.WriteLine(playerNames[0] + "'s turn");
+                turn++;
+                return turn;
+            }
+        }
