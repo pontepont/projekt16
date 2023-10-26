@@ -271,18 +271,20 @@
 
         // COMPUTER METHODS
 
-        static string ComputerMove(int[,] playField)
+        sstatic string ComputerMove(int[,] playField)
         {
-            Random pileGenerator = new Random();
-            int pile = pileGenerator.Next(1, 4);
+            int pile = 0;
+            int stickAmount = 0;
+            int försök = 0;
+            Random random = new Random();
 
-            Random stickGenerator = new Random();
-            int stickAmount = stickGenerator.Next(1, 6);
-
-            if (playField[pile-1, 0] == 0)
+            do
             {
-                return ComputerMove(playField);
-            }
+                pile = random.Next(1, 4);
+
+                stickAmount = random.Next(1, 6);
+
+            } while (playField[pile - 1, 0] < stickAmount);
 
             string computerMove = (pile + " " + stickAmount);
 
