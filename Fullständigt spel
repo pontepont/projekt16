@@ -1,0 +1,374 @@
+ static void Main(string[] args)
+        {
+            Console.WriteLine("Welcome statement");
+
+            // VARIABLER
+
+            bool playLoop = true; // Håller igång spelet så länge användarna vill spela.
+            int turnTrackerSwitch = 1; // 1 betyder spelare 1s tur och 0 betyder spelare 2s tur.
+            bool playerOneTurn = true; // För att veta när det är spelarens tur mot datorn.
+            string chosenMove = ""; // Kommer fyllas i av användaren och datorns input.
+            int[] winAmount = new int[2]; // Håller vinststatistik.
+            bool isMoveValid = false; // Kollar så att alla drag går att genomföra.
+
+
+
+            int oneOrTwoPlayers = TwoPlayersOrAI(); 
+            string[] userNames = CreateNames(oneOrTwoPlayers);
+           
+
+
+            if (oneOrTwoPlayers == 1) // En spelare.
+            {
+                do
+                {
+                    int[,] playField = new int[3, 1] // Spelplanen.
+                    {
+                    {5},
+                    {5},
+                    {5},
+                    };
+
+                    playLoop = PlayerVsAI(playField, turnTrackerSwitch, userNames, chosenMove, playLoop, winAmount, isMoveValid); // Inuti denna metod körs spelet och bereonde på om man vill spela igen returneras ett bool-värde.
+
+                } while (playLoop);
+            }
+
+
+            
+            else if (oneOrTwoPlayers == 2) // Två spelare.
+            {
+                do
+                { 
+                    int[,] playField = new int[3, 1] // Spelplanen.
+                    {
+                    {5},
+                    {5},
+                    {5},
+                    };
+
+                    playLoop = PlayerVsPlayer(playField, turnTrackerSwitch, userNames, chosenMove, playLoop, winAmount, isMoveValid); // Också en spelplan men för två spelare, fungerar nästan exakt likadant.
+
+                } while (playLoop);             
+            }
+        }
+       
+        /// GENERAL METHODS
+
+        /// <summary>
+        /// User Chooses between one or two players
+        /// </summary>
+        /// <returns>1 or 2</returns>
+        static int TwoPlayersOrAI()
+        {
+            Console.WriteLine("choose: one or two players (write 1 or 2)");
+            int.TryParse(Console.ReadLine(), out int oneOrTwoPlayers);
+
+            if (oneOrTwoPlayers > 0 && oneOrTwoPlayers < 3)
+            {
+                return oneOrTwoPlayers;
+            }
+            else
+            {
+                Console.WriteLine("Något gick fel: försök igen");
+                return TwoPlayersOrAI();
+            }
+        }
+
+        /// <summary>
+        /// Frågar om användarna vill spela igen.
+        /// </summary>
+        /// <returns>sant om de vill spela igen och falskt om programmet ska avslutas</returns>
+        static bool PlayAgain()
+        {
+            Console.WriteLine("Do you want to play again? (yes or no)");
+            string yesOrNo = Console.ReadLine();
+            switch (yesOrNo)
+            {
+                case "yes":
+                    {
+                        return true;
+                        break;
+                    }
+                case "no":
+                    {
+                        Console.WriteLine("Until next time!");
+                        return false;
+                        break;
+                    }
+                default:
+                    {
+                        Console.WriteLine("Try another input");
+                        return PlayAgain();
+                        break;
+                    }
+            }
+        }
+        
+        static int[] WinStatistics(int turnTrackerSwitch, string[] userNames, int[] winAmount)
+        {
+
+            if (turnTrackerSwitch == 0) // spelare 1.
+            {
+                winAmount[0] += 1;
+                Console.WriteLine(userNames[0] + " har vunnit " + winAmount[0] + " gånger!");
+                return winAmount;
+            }
+            else
+            {
+                winAmount[1] += 1;
+                Console.WriteLine(userNames[1] + " har vunnit " + winAmount[1] + " gånger!");
+                return winAmount;
+            }
+        } // Osäker på om denna fungerar.
+
+        /// <summary>
+        /// Skriver ut vems tur det är och uppdaterar "turnTrackerSwitch" som håller koll på vilken spelares tur det är.
+        /// </summary>
+        /// <param name="turnTrackerSwitch"></param>
+        /// <param name="UserNames"></param>
+        /// <returns>en 1a eller 0a beroende på vems tur det är</returns>
+        static int TurnTracker(int turnTrackerSwitch, string[] userNames)
+        {
+            if (turnTrackerSwitch == 1)
+            {
+                Console.WriteLine(userNames[0] + "'s tur");
+                turnTrackerSwitch--;
+                return turnTrackerSwitch;
+            }
+            else
+            {
+                Console.WriteLine(userNames[1] + "'s tur");
+                turnTrackerSwitch++;
+                return turnTrackerSwitch;
+            }
+        }
+
+        /// <summary>
+        /// Låter spelarna skapa sina namn (både 1 och 2 spelare)
+        /// </summary>
+        /// <param name="oneOrTwoPlayers"></param>
+        /// <returns>En string-array med spelarnas namn och datorn</returns>
+        static string[] CreateNames(int oneOrTwoPlayers)
+        {
+            if (oneOrTwoPlayers == 1)
+            {
+                Console.Write("Player one's username: ");
+                string playerOneUser = Console.ReadLine();
+
+                string[] UserNames = new string[2] { playerOneUser, "Computer" };
+                return UserNames;
+            }
+            else
+            {
+                Console.Write("Player one's username: ");
+                string playerOneUser = Console.ReadLine();
+                Console.Write("Player two's username: ");
+                string playerOTwoUser = Console.ReadLine();
+
+                string[] UserNames = new string[2] { playerOneUser, playerOTwoUser };
+                return UserNames;
+            }
+        }
+
+        static void WritePlayField(int[,] playField) // Kan förmodligen snyggas till.
+        {
+            Console.WriteLine();
+            for (int rowOne = 0; rowOne < playField[0, 0]; rowOne++)
+            {
+                Console.Write("| ");
+            }
+            Console.WriteLine("\n");
+
+            for (int rowTwo = 0; rowTwo < playField[1, 0]; rowTwo++)
+            {
+                Console.Write("| ");
+            }
+            Console.WriteLine("\n");
+
+            for (int rowThree = 0; rowThree < playField[2, 0]; rowThree++)
+            {
+                Console.Write("| ");
+            }
+            Console.WriteLine("\n");
+        }
+
+        static bool MoveValidity(string playerMove, int[,] playField)
+        {
+            string[] playerMoveSplit = playerMove.Split(' '); // eftersom spelaren skriver draget som en string måste vi göra om strängen till en array så att vi kan använda talen separat.
+
+            if (int.TryParse(playerMoveSplit[0], out int pile) && int.TryParse(playerMoveSplit[1], out int stickAmount)) // Kollar om det går att göra om värdena i string-arrayen till integers.
+            {
+                if (pile < 4 && pile > 0 && stickAmount < 6 && stickAmount > 0) // Kollar så att heltalens storlekar är inom spelplanen.
+                {
+                    if (playField[pile - 1, 0] != 0) // Kollar ifall högen redan är tom.
+                    {
+                        if (stickAmount <= playField[pile - 1, 0] && stickAmount > 0) // Kollar så att mängden stickor man vill ta bort faktiskt finns i högen man har valt.
+                        {
+                            playField[pile - 1, 0] -= stickAmount; // Den riktiga spelplanen uppdateras.
+                            return true;
+                        }
+                        else
+                        {
+                            Console.WriteLine("There is a problem with the amount of sticks chosen: try again");
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("The pile is already empty: try again");
+                        return false;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Your chosen pile or amount of sticks does not fit: try again");
+                    return false;
+                }
+            }
+            else
+            {
+                Console.WriteLine("Incorrect input: try again");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Kollar om någon har vunnit
+        /// </summary>
+        /// <param name="playField"></param>
+        /// <returns>sant eller falskt</returns>
+        static bool WinnerCheck(int[,] playField)
+        {
+            if (playField[0, 0] == 0 && playField[1, 0] == 0 && playField[2, 0] == 0) // Om alla värden i den riktiga spelplanen är 0 har någon vunnit.
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        static void WinSentence(int turnTrackerSwitch, string[] userNames)
+        {
+            Console.WriteLine($"Congratulations {userNames[turnTrackerSwitch]}, you won!!!");
+        }
+
+        // PLAYER METHODS
+
+        /// <summary>
+        /// Låter spelaren skriva in sitt drag.
+        /// </summary>
+        /// <returns>a string containing which pile and amount of sticks</returns>
+        static string PlayerMove()
+        {
+            Console.WriteLine("Choose the amount of sticks from a pile you want to remove.");
+            Console.WriteLine("You choose pile and amount of sticks by writing \"1 2\"");
+            string playerMove = Console.ReadLine();
+            return playerMove;
+        }
+
+        // COMPUTER METHODS
+
+        static string ComputerMove(int[,] playField)
+        {
+            Random pileGenerator = new Random();
+            int pile = pileGenerator.Next(1, 4);
+
+            Random stickGenerator = new Random();
+            int stickAmount = stickGenerator.Next(1, 6);
+
+            if (playField[pile-1, 0] == 0)
+            {
+                return ComputerMove(playField);
+            }
+
+            string computerMove = (pile + " " + stickAmount);
+
+            return computerMove;
+        }
+
+        // GAMELOOP METHODS
+
+        /// <summary>
+        /// Metoden innehåller själva loopen för hela spelet när man spelar mot varandra.
+        /// </summary>
+        /// <param name="playField"></param>
+        /// <param name="winner"></param>
+        /// <param name="turnTrackerSwitch"></param>
+        /// <param name="userNames"></param>
+        /// <param name="chosenMove"></param>
+        /// <param name="playLoop"></param>
+        static bool PlayerVsPlayer(int[,] playField, int turnTrackerSwitch, string[] userNames, string chosenMove, bool playLoop, int[] winAmount, bool isMoveValid) // Själva spel-loopen för två spelare
+        {
+                bool winner = false;
+                WritePlayField(playField);
+
+                while (winner == false)
+                {
+                    turnTrackerSwitch = TurnTracker(turnTrackerSwitch, userNames);
+
+                    do
+                    {
+                        chosenMove = PlayerMove();
+                        isMoveValid = MoveValidity(chosenMove, playField);
+                    } while (isMoveValid == false);
+                    
+                    WritePlayField(playField);
+
+                    winner = WinnerCheck(playField);
+                }
+
+            WinSentence(turnTrackerSwitch, userNames);
+            winAmount = WinStatistics(turnTrackerSwitch, userNames, winAmount);
+           
+            return playLoop = PlayAgain();
+        }
+
+        /// <summary>
+        /// Metoden innehåller själva loopen för hela spelet när man spelar mot datorn.
+        /// </summary>
+        /// <param name="playField"></param>
+        /// <param name="winner"></param>
+        /// <param name="turnTrackerSwitch"></param>
+        /// <param name="userNames"></param>
+        /// <param name="chosenMove"></param>
+        /// <param name="playLoop"></param>
+        static bool PlayerVsAI(int[,] playField, int turnTrackerSwitch, string[]userNames, string chosenMove, bool playLoop, int[] winAmount, bool isMoveValid) // Själva spel-loopen för En spelare mot AI.
+        {     
+                bool winner = false;
+                WritePlayField(playField);
+
+                while (winner == false)
+                {
+                    turnTrackerSwitch = TurnTracker(turnTrackerSwitch, userNames);
+
+                    if (turnTrackerSwitch == 0)
+                    {
+                        do
+                        {
+                            chosenMove = PlayerMove();
+                            isMoveValid = MoveValidity(chosenMove, playField);
+                        } while (isMoveValid == false);
+                    }
+                    else
+                    {
+                        do
+                        {
+                            chosenMove = ComputerMove(playField);
+                            isMoveValid = MoveValidity(chosenMove, playField);
+                        } while (isMoveValid == false);
+
+                    Console.WriteLine(chosenMove);
+                    }
+                    WritePlayField(playField);
+
+                    winner = WinnerCheck(playField);
+                }
+            WinSentence(turnTrackerSwitch, userNames);
+            winAmount = WinStatistics(turnTrackerSwitch, userNames, winAmount);
+
+            return playLoop = PlayAgain();
+
+        }
